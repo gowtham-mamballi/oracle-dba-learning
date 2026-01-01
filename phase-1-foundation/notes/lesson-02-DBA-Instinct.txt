@@ -1,0 +1,101 @@
+Lesson10: Logs, Diagnostics and DBA instince:
+--------------------------------------------
+  tools don't makes DBAs good , judgment does.
+
+=============================
+ 1. Most important DBA logs:
+=============================
+ The alert log records:
+  1. startup and shutdown events
+  2. checkpoints
+  3. redo log switches
+  4. recovery progress
+  5. ora-errors that matter
+  6. structural changes
+
+* Important rule: if something feels wrong, read the alert log before touching anything
+
+============================
+2. What the alert log is not:
+============================
+
+ 1. a full error dump
+ 2. a performance dashboard
+ 3. a place for every warning
+
+so:
+ 1. not every ora-message - panic
+ 2. context matters
+
+we should read:
+ patterns
+ sequences
+ timing
+not single lines
+
+================================
+3.trace files(when you go deeper)
+================================
+Trace files:
+ 1. are session or process specific 
+ 2. contain detailed diagnostics
+ 3. are verbose and technical
+
+use trace files when:
+ 1. alert log points to something specific 
+ 2. oracle asks for it
+ 3. you are diagnosing repeatable issues
+
+* don't start with trace files, they are step two not step one
+
+==========================
+4.common DBA panic mistakes
+==========================
+ X -- restarting the database immediately
+   why it's bad:
+   ------------
+    1. destroys evidence
+	2. may worsen recovery
+	3. masks the real issues
+
+ X -- flushing shared pool/ buffer cache blindly
+   why it's bad:
+   ------------
+    1. cuases hared parse storms
+	2. cpu spikes
+	3. tempoarary relief, long-term harm
+	
+ X -- blaming disk or network first
+   most issues are:
+   ----------------
+    . parsing
+	. memory pressure
+	. concurrency
+	. workload change
+  disk is often innocent
+
+=======================
+5.The DBA triage order:
+=======================
+ when something feels wrong:
+  1. read alert log
+  2. ask: Is oracle recovering or working
+  3. observe before acting
+  4. act only when you understand the phase oracle is in 
+
+=====================
+6.senior DBA instinct  
+=====================
+  junior DBA: 
+   something's wrong - do something
+  
+  senior DBA:
+   oracle is doing exactly what it's supposed to do. let it finish
+  
+ eg:
+ --
+  1. slow startup     --> recovery running
+  2. High cpu, low IO --> parsing/shared pool
+  3. redo wait's      --> commit pressure
+
+  
