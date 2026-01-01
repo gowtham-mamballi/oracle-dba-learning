@@ -1,0 +1,117 @@
+DBA-P2-L01 — Oracle Database Architecture
+-----------------------------------------
+
+=======================
+1. Instance vs Database
+=======================
+ oracle instance:
+ ---------------
+  volatile - exists only while oracle is running
+  Instance = memory structures
+             background processes 
+  * If instance crashes, memory is gone.
+
+ oracle database:
+ ---------------
+  Persistent - lives on disk 
+  Database = data files
+             control files
+             redo log files
+
+  * if server reboots -> database files are still there
+
+ -- Instance runs the database.database stores the data
+
+===============================
+2. High level architecture flow 
+===============================
+     Client
+       ↓
+  Server Process
+       ↓
+  SGA (Shared Memory)
+       ↓
+  Database Files (Disk)
+  
+every oracle operations follows this path
+
+=====================
+3. Memory architecture
+======================
+
+ SGA:
+ ---
+  shared by all sessions 
+ 
+ key components:
+ 
+| Component                 | Purpose                      |
+| ------------------------- | ---------------------------- |
+|   Database Buffer Cache   | Holds data blocks            |
+|   Shared Pool             | SQL, PL/SQL, data dictionary |
+|   Redo Log Buffer         | Change vectors               |
+|   Large Pool (optional)   | RMAN, parallel exec          |
+|   Java Pool (optional)    | Java in DB                   |
+
+* if sga is mis-sized performance pain shows up everywhere
+
+ PGA:
+ ---
+  private to each server process
+  
+ contains: 
+ -------
+  . sort area
+  . hash joins
+  . session memory
+  
+ * too small PGA = disk sorts = slow queries 
+
+======================
+4.background processes
+======================
+
+  | Process  | Role                               |
+  | -------- | ---------------------------------- |
+  |   DBWR   | Writes dirty buffers to datafiles  |
+  |   LGWR   | Writes redo to redo logs           |
+  |   CKPT   | Updates control & datafile headers |
+  |   SMON   | Instance recovery                  |
+  |   PMON   | Process cleanup                    |
+
+==============================
+5. Physical database structure
+==============================
+
+ datafiles:
+ ----------
+  . stores actual table and index blocks
+  . belong to tablespaces
+  
+ control files:
+ --------------
+  . database metadata
+  . file names, checkpoints, SCN
+  . critical -> multiplex always 
+  
+ redo log files:
+ ---------------
+  . sequential write 
+  . used for crash and media recovery
+  . written by LWGR
+  
+ * no redo = no recovery
+
+========================
+6. life of sql statement
+========================
+
+1. sql arrives
+2. parse(shared pool)
+3. data block read into buffer cache 
+4. changes recorded in redo buffer
+5. commit -> LGWR writes redo
+6. DBWR writes data later
+
+commit != data file write 
+
