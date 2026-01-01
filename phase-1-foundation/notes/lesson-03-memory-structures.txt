@@ -1,0 +1,104 @@
+Lesson 3: shared pool
+---------------------
+
+all the oracle performance problems starts or points here
+
+shared pool is part of SGA
+ 1. shard by all sessions
+ 2. protected by internal synchronization
+ 3. critical for scalability
+
+============================== 
+what lives inside shared pool:
+==============================
+
+ 1. Library cache:
+ -----------------
+  hold: sql statments
+        execution plans
+		pl/sql codes
+ 
+  This is where : soft parse happens 
+                  hard parse hurts
+				  
+ 2. data dictionay cache:
+ ---------------------- 
+  hold: table defnition
+        index metadata
+		user and previlege information
+ 
+ - every sql needs dictionay access, even select 1 from dual;
+ - no dictionary - no parsing
+
+============================== 
+why shared pool is bottleneck:
+============================== 
+ . shared
+ . mutable
+ . highly concurrent
+   
+   That means
+   1. multiple session wants to read or write to it
+   2. oracle must protect it with internal locks(latches/mutexes)
+
+================
+connecting to l2:
+================
+ * hard parse = modifying shared structures
+ * modifying shared structures = contention
+ - this is why hard parse does not scale
+
+============================================
+But my sql is fast, why this argument fails:
+============================================
+ lets connect the dots:
+   
+   execution:
+    . uses buffer cache
+    . can run in parallel
+    . scales resonably
+   
+  Parsing:
+   . uses shared pool
+   . serialized under contention
+   . scales poorly
+   
+-- if execution = 1ms
+      parsing   = 5ms
+   
+   * thousands of sessions are doing it, 
+   * sytem spends most of its time waiting, not working 
+   
+-- DB is busy doing nothing
+
+=========================================
+why adding shared pool memory often fails:
+=========================================
+ 
+ adding memory helps only if 
+   . sql can be reused
+ 
+ if the application
+  . uses literals
+  . generates dynamic sql
+  . changes sql text constantly
+ then
+  . new memory fills up
+  . old sql ages out
+  . hard parsing continues
+
+Early warning signs:
+ shard pool stress often shown as:
+  1. high cpu usage
+  2. low I/O activity
+  3. many active sessions
+  4. but poor throughputs
+     
+	 no disk is busy, no data is slow -- yet everything feels sluggish
+* this is internal contention not external latency
+shared pool is coordination point, not data store
+
+
+
+	 
+ 

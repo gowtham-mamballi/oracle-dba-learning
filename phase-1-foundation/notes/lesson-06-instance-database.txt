@@ -1,0 +1,108 @@
+Lesson 6 : buffer cache : how oracle uses memory to aviod disk
+--------------------------------------------------------------
+
+ shared pool is about coordination. buffer cache is about work
+
+=======================
+1. what is buffer cache
+=======================
+ memory area that stores copies of data blocks read form disk
+ 
+. disk is the source of truth 
+. memory is the working area
+
+oracle policy:
+-------------
+ memory first disk only if needed
+
+======================================
+2. what happens when oracle needs data
+======================================
+ when a query needs a data block:
+  1. oracle checks the buffer cache
+  2. if block is found --> cache hit
+  3. if block is not found --> physical read from disk 
+  4. block is copied into buffer cache
+  5. query works on the memory copy
+ 
+* key idea -- oracle never works directly on disk blocks, everything happens in memory 
+
+=========================
+3. clean vs dirty buffers
+=========================
+ c. memory copy matches disk copy 
+ no changes made
+ can be dicarded anytime
+ 
+ d. memory copy has been modified 
+ disk copy is now outdated 
+ must be written back to disk eventually
+ 
+========================== 
+4. what happens during DML 
+==========================
+update emp set sal = sal + 100 wehre empno = 10;
+
+flow :
+-----
+ 1. required block is read into buffer cache (if not already)
+ 2. oracle modifies the block in memory
+ 3. blocks becomes dirty 
+ 4. redo is generated 
+ 5. transaction commits
+ 6. block stays in memory
+ 
+ commit does not mean data is written to disk 
+
+======================================= 
+5. why DBWR does not write immediately:
+=======================================
+ DBWR writes dirty buffers to disk
+
+but:
+----
+ . writing to disk is slow
+ . writing every change immediately would kill performance
+ 
+so oracle:
+---------- 
+ . batches writes
+ . writes asynchronously
+ . writes when needed 
+ 
+DBWR writes when:
+----------------
+ . free buffers are needed 
+ . checkpoint occur
+ . memory pressure exists
+ . periodic internal triggers fire
+ 
+* oracle optimizes for throughput not immediacy
+
+=====================================
+6. why this design makes oracle fast:
+=====================================
+ . reads come from memory
+ . writes are deferred and grouped 
+ . disk IO is minimized 
+ . CPU is kept busy
+ 
+* oracle performace are usually memory or concurrency not disk
+
+========================
+7. common misconceptions
+========================
+ ** commit writes data to disk X 
+    commit writes redo, no data blocks 
+ 
+ ** DBWR is slow
+    DBWR is strategic, not slow
+ 
+ ** high IO means storage is bad
+    often means memory is undersized or misused
+ 
+** oracle reads eagerly, writes lazily
+
+* Commits are fast because Oracle only needs to flush redo, not data blocks, allowing dirty buffers to remain in memory.
+
+* Oracle always works in memory; disk is synchronization, not execution.

@@ -1,0 +1,70 @@
+Lesson1: What happens when we run
+---------------------------------- 
+
+sql:
+ select 1 form dual;
+
+================================ 
+1. we need to connect to sqlplus
+================================ 
+  - sqlplus user/pswd@service 
+  - we are connecting to oracle instance(Memory+BGP) not the oracle DB.
+  
+=======================
+2. sessions are creted
+=======================
+ - server process is created for user.
+ |which attaches to 
+ |---> SGA
+ |allocates its
+ |---> Own PGA
+ 
+ - Execute sql on your behalf
+
+=========================
+3. sql enters shared pool
+==========================
+ - Have i seen this before 
+ -      Library cache      -- 1. same sql
+                              2. same schema 
+							  3. same optimizer enviornment 
+							                YES --> soft Parse
+											NO  --> Hard Parse
+									
+=================
+4. parse phase
+=================
+ 1. checks the syntax
+ 2. checks the objects existence(dual)
+ 3. checks privileges
+ 4. Generates an execution plan 
+		for dual --> special one-row one-column table, knowns it can be satisfy instantly
+ 5. parsing uses cpu + shared memory no disk 
+
+ - performance problem starts here not in execution
+
+============
+5. Execution 
+============
+ oracle executes the plan 
+
+for this query: 1. no data is read
+				2. no buffer cache access
+				3. no redo generation
+				4. no undo usage
+		simply: 1. evaluates constant 1
+		     	2. prepare result 1
+
+===============
+6. Fetch phase
+===============
+ 1. placed in the session memory (PGA)
+ 2. sent back through server process 
+ 3. dipslayed by client
+ 
+**********
+sql execution always follows parse -> execution -> fetch 
+even if some phases are very fast or do nothing 
+**********
+ 
+ 

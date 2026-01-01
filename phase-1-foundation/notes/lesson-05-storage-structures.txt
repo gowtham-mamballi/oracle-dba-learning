@@ -1,0 +1,56 @@
+Lesson 5: Shared pool internals
+-------------------------------
+
+ The shared pool is a working area for sql and metadata, not a cache with guarantees.
+
+oracle uses it to:
+----------------- 
+ . Parse sql
+ . store execution plan 
+ . coordinate concurrent work
+ 
+it is:
+------
+ . shared
+ . mutable
+ . under constant pressure
+ 
+=========================================== 
+1. what the shared pool is constantly doing
+=========================================== 
+  . allocating memory for new cursors
+  . reusing memory for existing cursors
+  . aging out old cursors
+  . protecting memory structures
+  . handling concurrent access
+
+===========  
+2. ORA-0431 
+===========
+ unable to allocate x bytes of shared memory 
+ oracle could not find a contiguous chunk of free memory that matches the request at that moment
+ 
+key implications
+----------------
+ . total free memory may exist
+ . but it may be fragmented
+ . or locked by other activity
+ 
+why it appears suddenly
+-----------------------
+ from the outside:
+  . nothing changed
+  . it worked yesterday
+  
+ Internally:
+  . cursor churn increased
+  . hard parsing increased
+  . memory fragmentation increased
+  . concurrency increased
+  
+ eventually:
+  .one allocation request fails
+  .error surfaces
+  
+* The error is the result, not the cause.
+

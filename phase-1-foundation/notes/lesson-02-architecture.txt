@@ -1,0 +1,119 @@
+Lesson 2: Parsing : where performance problems are born
+------------------------------------------------------
+
+================
+1. parsing means:
+================ 
+ not just syntax check 
+	1. validate the sql text
+	2. resolve object names
+	3. check privileges
+	4. decide how to run the sql - optimizer
+	5. store meta data in memory
+ 
+ everything happens primarily on shard pool of SGA.
+ If parsing is unhealthy everything else suffers
+
+=============== 
+2. soft vs hard
+===============
+
+soft:
+-----
+ . sql text already exists in the shared pool 
+ . execution plan already exists
+ . oracle just reuses it
+ 
+cost:
+ . very low cpu
+ . minimal memory work
+ 
+Hard:
+-----
+ when sql text is new or cannot be reused
+
+oracle must:
+ . allocate shared memory
+ . run optimizer
+ . create a new execution plan
+ . protect memory structures with latches and mutexes
+ 
+cost:
+ . high CPU
+ . contentions
+ . scalability killers
+ 
+* one hard parse is fine, thousands per second = meltdown
+
+===============================================
+3. why identical queries might not be identical
+===============================================
+
+ select * from emp where empno = 10;
+ select * from emp where empno = 20;
+ 
+not same, literal values are part of the sql text.
+
+ 1. Two hard parse
+ 2. Two execution plans
+ 3. Twice the shared pool work 
+    this is why 1. Bind variables exist
+	            2. cursor sharing matters
+
+===================================
+4. shared pool is a shared resource
+====================================
+ parsing is sealized under contention 
+ 
+when many sessions hard parse
+ 1. They fight for memory 
+ 2. They wait on latches or mutexes
+ 
+Symptoms:
+--------
+ 1. High cpu but low work
+ 2. sessions active but doing nothing useful
+ 3. applications slowdown without IO spike
+ 
+-- DBA fix this by reducing parse load not adding CPU
+
+==================================
+5. parsing does not scale linearly:
+==================================
+
+ . executions can scale
+ . parsing often cannot
+
+that's why:
+----------
+ . shared pool tuning
+ . cursor resuse
+ . applications sql patterns matter more than clever sql tricks
+ 
+- execution consumes data, parsing consumes shared resources 
+
+A system can be slow even when quires are real becuase the db is spending most of its time parsing sql (hard parse), not executing it.
+parsing consumes shared cpu and memory, causes contention in the shared pool and does not scale with concurrency even if each individual execution is fast.
+
+why this matters:
+-----------------
+ Think in volumes, not single execution 
+ query execution = 2ms
+ hard parse      = 5ms
+                   2000 users
+  each sending unique sql
+  each forcing a hard parse
+
+result:
+-------
+ . cpu spikes
+ . shared pool contention
+ . sessions waiting on internal locks
+ . throughput collapses
+ 
+. Nothing is slow individually system is slow collectively
+* parsing time grows with concurrency, execution time grows with data
+
+-- A value written directly inside the SQL text is a literal.
+   A placeholder defined in the SQL text, whose value is supplied separately at execution time, is a bind variable
+

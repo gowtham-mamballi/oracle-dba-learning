@@ -1,0 +1,100 @@
+Lesson 4: Cursor lifecycle , why sql appears, disappears and multipies
+----------------------------------------------------------------------
+
+=========
+1. Cursor
+==========
+ oracle in-memory representation of a parsed sql statment 
+ 
+it includes:
+ 1. sql text
+ 2. execution plan 
+ 3. metadata
+ 4. environment under which it was parsed
+
+cursor =! just a pointer
+cursor = parsed+planned sql in memory
+
+=========================
+2. Parent vs child cursor
+=========================
+
+p. represents the sql text, one parent per unique sql text 
+ 
+ select * from emp where empno = :b1;
+ 
+c. represents how the sql is executed
+
+depends on:
+----------- 
+ 1. optimizer environment
+ 2. bind behavior
+ 3. session settings
+ 
+so
+-- 
+ same sql text
+ same parent cursor
+ multiple child cursor 
+
+==================================
+3. why same sql has multiple plans
+==================================
+
+ oracle creates new child cursors when 
+   1. optimizer environment changes
+   2. bind values lead to different plan choices
+   3. certain session parameter differ
+
+===================
+4. cursor lifecycle
+===================
+ 1. sql arrives
+ 2. oracle checks shared pool
+ 3. parent cursor exists?
+    . NO -> create parent + child (hard parse)
+    . Yes -> check for usable child
+ 4. child usable?
+    . Yes -> soft parse
+    . NO  -> create new child (Still hard parse)
+ 5. cursor used
+ 6. cursor become idle
+ 7. memory pressure occurs
+ 8. oracle ages out cursors
+
+======================================
+5. why sql disappears from shared pool
+======================================
+ shared pool is not cache with guarantees
+ 
+ oracle does not promise:
+  . your sql will stay forever
+  . your execution plan will be resued 
+  
+ when memory pressure occurs
+  . least useful/ least recently used cursor go first
+  . hard parse will recreate them later 
+  
+ this is why:
+  . sql can vanish
+  . hard parsing suddenly spikes
+  . DBAs get confused if they don't understand lifecycle
+ 
+========================= 
+6. why this feels random 
+========================= 
+  to humans:
+   . it was working fine
+   . nothing changed
+  
+  to oracle:
+   . memory pressure changed 
+   . workload mix changed
+   . cursor usefulness changed
+  
+ * oracle reacts not predicts
+
+** the shared pool maanges usefulness not importance
+   oracle doesn't care if sql is critical , it only cares if it's reusable right now .
+ 
+ * Cursor reuse minimizes hard parsing, reduces shared pool contention, and allows the database to scale under concurrency.

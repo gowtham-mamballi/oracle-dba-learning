@@ -1,0 +1,64 @@
+Lesson_9: starup, shutdown and instance recovery
+-----------------------------------------------
+
+========================
+1. Instance vs Database:
+======================== 
+  Instance = memory(SGA) + background processes
+  Database = datafiles + control files + redo logs
+  
+startup = bringing the instance up and attaching it to the database
+
+================
+2. startup pahse
+===============
+ 
+ 1. NOMOUNT
+ ----------
+	. allocates SGA
+	. starts background processes
+	. reads init parameters
+  what is not accessed:
+    . no control files
+	. no datafiles
+	. no redo logs
+ 
+ ** prepare memory and processes
+ 
+ 2. MOUNT
+ ---------
+   . opens control files
+   . knows database structure
+   . knows locations of datafiles and redo logs 
+  what is not accessed:
+   . data inside tables
+ 
+ ** oracle now knows what the database looks like 
+ 
+ 3. OPEN
+ -------
+   . opens datafiles
+   . opens redo logs
+   . database becomes usable 
+   
+ ** make data accessible to users
+ 
+========================== 
+3. clean shutdown vs crash 
+==========================
+
+ clean shutdown:
+ --------------- 
+  before shutdown:
+   1. DBWR writes dirty buffers
+   2. checkpoint ensures consistency
+   3. datafiles and control files are synchronized
+  result:
+   . no recovery needed at next startup
+   . startup is fast
+  
+  crash/abort/instance failure
+  ----------------------------
+   before crash:
+    1. diry buffers may exist
+	2. redo is safe on disk 

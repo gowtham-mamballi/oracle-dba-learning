@@ -1,0 +1,110 @@
+Lesson 7: Redo logs and LGWR
+----------------------------
+
+ Dirty block make oracle fast , redo makes oracle safe.
+
+================
+1. what is redo:
+================
+  
+  record of change vectors describing what was changed in the database.
+ redo is not data, it describes how to reapply the change.
+
+========================== 
+2. where redo is generated:
+==========================
+
+  when oracle modifies a block in the buffer cache 
+   1. the block becomes a dirty block 
+   2. redo describing that change is generated
+   3. redo is placed in the redo log buffer
+   
+this happens for :
+----------------- 
+ INSERT
+ UPDATE
+ DELETE
+ DDL
+ some internal operations
+ 
+* redo is generated before commit
+
+=================
+3. what LGWR does
+=================
+
+ . writes redo from memory to redo log files on disk
+ . writes sequentially
+ . writes in large, efficient chunks
+ 
+- sequential writes = fast IO
+
+=========================
+4. what happens at commit
+=========================
+ 
+ oracle does:
+  1. flushes redo for your transaction from redo buffer to disk 
+  2. LGWR confirms redo is safely written 
+  3. commit returns success to user
+
+what oracle does not do:
+ 1. it does not write dirty data blocks to disk 
+ 
+commit = redo durability, not data block write 
+
+=====================
+5. why commit is fast:
+=====================
+ . redo is sequential
+ . redo writes are small and efficient
+ . no random IO 
+ . no waiting for DBWR
+ 
+so even with:
+------------
+ 1. many dirty buffers
+ 2. heavy DML
+commit remain fast (unless redo is stressed)
+
+===========================
+6. how crash recovery works:
+=========================== 
+ 
+ scenario:
+ -------- 
+  1. dirty buffer exist
+  2. redo is safely written 
+  3. instnace crashes 
+  
+ on startup:
+ -----------
+  1. oracle reads redo logs
+  2. reapplies changes to data blocks
+  3. rolls database forward to a consistent state
+ 
+* this is why oracle can delay DBWR and still gurantee consistency
+
+=========================
+7. why redo is sequential 
+=========================
+ redo is written :
+  . in order
+  . without seeking
+  . continuously
+ 
+ this design:
+ -----------
+  . maximizes throughput
+  . minimizes latency
+  . makes commit fast
+ 
+that is why: redo disk must be fast and reliable 
+
+* DBWR makes data persistent eventually, LGWR makes transactions safe immediately
+
+Oracle modifies data blocks in memory, generating redo that describes those changes. On COMMIT, Oracle waits only for LGWR to flush redo to disk, not for DBWR to write data blocks. DBWR writes dirty blocks later in batches based on internal triggers
+
+Redo uses sequential writes, which are fast and predictable, while data blocks are written randomly by DBWR in batches, which is slower and optimized for throughput rather than latency.
+
+

@@ -1,0 +1,114 @@
+Lesson 8: checkpoints- where memory, redo and disk finally agree
+----------------------------------------------------------------
+
+ checkpoints-are not about performance they are about control, saftey and recovery time
+
+======================== 
+1. what is a checkpoint:
+========================
+
+ a synchronization point where oracle ensures that all data changes up to a certain SCN are written to disk.
+ 
+ in simpler words:
+  . memory and disk are brough into agreement 
+  . oracle marks a safe recovery boundary
+ 
+ * checkpoint does not stop the DB , it coordinates writing 
+ 
+=============================
+2. why checkpoints are needed
+=============================
+
+ if redo can recover everything , why bother writing data blocks
+
+two reasons:
+----------- 
+ . recovery time 
+    1. without checkpoints, recovery would mean replaying huge amounts of redo
+    2. that would make startup after crash very slow
+ 
+ . space management 
+    1. redo logs are reused
+    2. oracle must ensure old redo is no longer needed before overwriting it
+
+* checkpoints limit how far oracle has to go back during recovery
+
+===========================================
+3. what actually happens during a checkpoint
+===========================================
+
+ 1. oracle decides a checkpoint is needed
+ 2. DBWR is signaled
+ 3. DBWR writes dirty buffers to datafiles
+ 4. control files and datafile headers are updated with the checkpoint SCN
+ 5. redo logs can now safely move forward
+
+** trasactions keep running
+   this is not a pause
+   it's coordination, not interruption
+
+==============================
+4. what triggers a checkpoint:
+==============================
+ 1. log switch(redo log fills)
+ 2. database shutdown (normal/immediate)
+ 3. tablespace going offline
+ 4. manual checkpoint
+ 5. certian internal thresholds
+
+** most common real world trigger is redo log switch
+
+====================
+5. SCN - silent hero
+====================
+ system change number
+  . A logical timestamp
+  . increases with every committed change
+
+ At checkpoint:
+ -------------
+  . oracle records the SCN up to which data is safely on disk 
+
+ After crash:
+ -----------
+  . oracle knows 
+     . Everything before this SCN is already written 
+     . redo after this SCN must be applied
+
+** SCN is how oracle avoids guessing 
+
+======================
+6. checkpoints vs DBWR
+====================== 
+  DBWR = writes whenever needed
+  checkpoint tells DBWR what must be written now 
+  
+ DBWR = worker
+ checkpoing = coordinator
+ 
+** DBWR may write blocks even without a checkpoint , checkpoint ensures completeness up to an SCN
+
+====================================
+7. why too many checkpoints can hurt
+====================================
+ Frequent checkpoints:
+ --------------------
+  . Increases DBWR activity
+  . Increase disk IO
+  . can hurt performance
+  
+  Infrequent checkpoints:
+  ----------------------
+   . increase recovery time
+   . risk longer startup after crash
+   
+** aim for redictable recovery not constant flushing 
+
+** redo gurantess recoverability, checkpoints bound recovery time
+
+DBWR normally writes dirty buffers opportunistically, but checkpoints force DBWR to write all dirty buffers up to a specific SCN to synchronize memory and disk.
+
+A redo log switch forces a checkpoint, ensuring dirty buffers are written to disk so that the previous redo log can be safely reused.
+
+
+Redo changes are generated and placed in the redo log buffer in memory. LGWR writes this redo to redo log files on disk. After a log switch and a successful checkpoint, Oracle can safely reuse the redo log files.
