@@ -8,6 +8,7 @@ Lesson_9: starup, shutdown and instance recovery
   Database = datafiles + control files + redo logs
   
 startup = bringing the instance up and attaching it to the database
+user connect to instance, instance access the database.
 
 ================
 2. startup pahse
@@ -60,5 +61,57 @@ startup = bringing the instance up and attaching it to the database
   crash/abort/instance failure
   ----------------------------
    before crash:
-    1. diry buffers may exist
-	2. redo is safe on disk 
+    1. diry buffers may exist in memory
+	2. redo is safely written to disk 
+    3. datafiles may be inconsistent	
+ result:
+ ----- 
+    . Instance recovery required on next startup
+
+============================
+4. what is instance recovery
+============================
+ 
+ oracle using redo to make datafiles consistent
+ 
+ steps:
+ -----
+  1. read redo logs
+  2. roll forward committed changes
+  3. roll back uncommitted changes
+  4. open database
+ 
+ * Happens automatically during startup
+
+====================================
+5. why instance recovery time varies
+====================================
+
+ recovery time depends on:
+  1. amount of redo generated since last checkpoint
+  2. frequency of checkpoints
+  3. workload before crash
+ 
+* more redo after last checkpoint -> longer recovery
+
+========================================
+6. why startup can feel slow after crash
+========================================
+ common reasons:
+  1. large redo to apply
+  2. infrequent checkpoints
+  3. heavy workload before crash
+  4. slow redo disks
+  
+ * slow startup usually means recovery work not a problem 
+
+=========================
+7. DBA instinct(critical)
+=========================
+ 
+ when startup is slow after crash
+
+  . read alert log
+  . let recovery finish 
+  . understand what oracle is doing 
+
