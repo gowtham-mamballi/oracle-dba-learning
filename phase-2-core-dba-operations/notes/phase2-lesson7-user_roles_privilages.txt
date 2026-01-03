@@ -1,0 +1,109 @@
+Lesson07-user, roles and privilages
+-----------------------------------
+======
+1.user
+======
+who is connecting
+ a user is a:
+ -----------
+  . is a db account
+  . owns objects(tables, indexes, procedures)
+  . connects to oracle using username and password
+  eg: user = schema owner
+  * user is an account that owns objects and connects to database
+
+===========  
+2.privilage
+===========
+what can be done
+
+ system privilage
+ ---------------
+ allow actions at database level
+ eg:
+ . create session 
+ . create tables
+ . alter user
+ 
+ object privilage
+ ---------------
+ allow actions on specific objects
+ eg:
+ . select
+ . insert
+ . update
+ . delete
+ . execute
+ . select on hr.employees
+
+=======
+3. role 
+=======
+collection of privilage
+a role is a :
+ . named group of privilage
+ . make privilage managment easy 
+ . is the recommended way to grant access 
+ * role = bundle of privilage
+
+======================= 
+4. why DBA prefer roles
+=======================
+instead of :
+ grant select, insert, update to 50 users;
+ 
+DBA do :
+ grant privilage to role
+ grant role to user
+ 
+uses:
+. easy revocation 
+. consistency
+. less error prone
+
+===============================
+5. default vs non-default roles
+===============================
+default     - enable at login 
+non-default - enable manually 
+why this matters
+ . security 
+ . application behaviour
+ . stored procedures
+ 
+===========
+6. profiles
+===========
+profile controls
+ . password rules
+ . resource limits (cpu, sessions)
+ 
+eg:
+ password_life_time
+ failed_login_attempts
+ 
+| Item      | Purpose              |
+| --------- | -------------------- |
+| User      | Identity             |
+| Privilege | Permission           |
+| Role      | Group of permissions |
+| Profile   | Limits & rules       |
+
+
+****
+User vs Role vs Privilege
+User is a database account that connects to the database and owns objects
+
+Role is a collection of privileges assigned to users
+
+Privilege defines what actions a user is allowed to perform
+
+System vs Object Privileges
+System privileges allow actions at database level
+Object privileges allow actions on specific objects like tables or indexes
+
+Why roles are preferred
+Roles make privilege management easier,
+consistent, and less error-prone across users
+
+ 
