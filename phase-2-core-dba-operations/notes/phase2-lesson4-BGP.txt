@@ -1,0 +1,77 @@
+Lesson 4: Backgorund processes
+------------------------------
+
+================================
+1. Why background processes exist
+=================================
+ oracle is designed so that:
+  . user processes do not write directly to disk 
+  . background processes handle disk I/O, recovery and housekeeping
+ * this is why oracle scales and survives crashes
+ 
+=================================
+2. mandatory background processes
+=================================
+
+ DBWR - Database writer
+ ......................
+  . writes dirty buffers from buffer cache to datafiles
+  . writes asynchronously
+  . triggered by
+   1. buffer shortage
+   2. checkpoints
+   3. timeout
+  * DBWR writes modified data blocks to datafiles
+ 
+ LGWR - Log writer
+ .................
+  . writes redo entries from redo log buffer to redo logs
+  . writes
+    1. on commit
+	2. every 3 seconds
+	3. when buffer is 1/3rd full
+  * commit waits for LGWR no DBWR
+  
+  CKPT - checkpoint
+  ..................
+   . signals DBWR
+   . updates:
+     1. control files
+	 2. datafile headers
+   * CKPT does not write data blocks
+   
+  SMON - system monitor
+  ...................
+   . performs instance recovery
+   . cleans up temporary segments
+   . runs automatically after crash
+   
+  PMON - Process monitor
+  .......................
+   . cleans up failed user sessions
+   . releases locks
+   . frees resources
+
+===================
+3. Other common BGP
+===================
+ 1. ARCn         - archive redo logs - archivelog mode
+ 2. MMON / MMNL  - memory monitoring
+ 3. RECO         - distributed transaction recovery
+
+============================
+ 4. HOw it all fits together
+============================
+ 
+ 
+     User Session
+       ↓
+     Buffer Cache (SGA)
+       ↓            ↘
+     Redo Buffer → LGWR → Redo Logs
+       ↓
+     DBWR → Datafiles
+	 
+ * redo protects changes, datafiles store final state
+ 
+

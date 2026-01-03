@@ -1,0 +1,116 @@
+Lesson6: redo, undo and checkpoint
+----------------------------------
+
+=======
+1. Redo
+=======
+ what redo is:
+ ------------
+  . redo records everychange made to data
+  . stores first in redo log buffer(SGA)
+  . written to disk by LGWR
+  
+ * redo is change based not data based
+   redo records how data chaged not the data itself
+   
+ when LGWR writes to redo:
+ ------------------------
+ . on commit
+ . every 3 second
+ . when redo buffer is 1/3rd full
+ 
+ why redo exists:
+ ---------------
+ . crash recovery
+ . instance recovery
+ . media recovery
+ 
+ * if redo is written, data can be recovered
+ 
+======= 
+2.undo 
+=======
+ 
+ what undo is:
+ ------------
+ . undo stores before image of data
+ . stored in undo ts
+ . written by DBWR like normal data
+ 
+ * UNOD is data based, not change based
+ 
+ what undo is used for:
+ ---------------------
+ . rollback
+ . read consistency
+ . flashback features
+ 
+ * undo allows oracle to reconstruct older version of data
+   undo is not redo, undo itself generates redo 
+
+===============   
+3. redo vs undo
+===============
+
+ | Aspect              | Redo           | Undo               |
+ | ------------------- | -------------- | ------------------ |
+ | Purpose             | Recovery       | Consistency        |
+ | Stores              | Change vectors | Before-image       |
+ | Written by          | LGWR           | DBWR               |
+ | Location            | Redo logs      | UNDO tablespace    |
+ | Exists after commit | Yes            | Eventually cleaned |
+
+============= 
+4. checkpoint
+=============
+what checkpoint is:
+------------------
+ checkpoint is a event not a process
+
+during checkpoint:
+-----------------
+ . dirty buffers are written to datafiles (via DBWR)
+ . control files updated
+ . datafile header updated
+ 
+* CKPT signals, DBWR writes
+
+why checkpoint matters:
+----------------------
+. reduces the recovery time
+. limit of how much the redo must be applied
+. mark a consistent database point
+
+what checkpoints do not do:
+--------------------------
+. do not write redo
+. do not guarantee commit
+. do not flush redo buffer
+
+================================
+5. how everything works together:
+================================
+
+User changes data
+   ↓
+Undo created (before image)
+   ↓
+Redo generated (change record)
+   ↓
+COMMIT → LGWR writes redo
+   ↓
+Later → DBWR writes data + undo
+   ↓
+Checkpoint updates headers
+
+commit = redo on disk, not data on disk 
+
+=================
+6. crash scenario
+=================
+ If instance crashes:
+  . SMON reads redo logs
+  . Applies commited changes 
+  . rolls back uncommited work using undo
+  
+  

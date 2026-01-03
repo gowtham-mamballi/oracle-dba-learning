@@ -1,0 +1,92 @@
+========================================
+DBA-P2-LAB-02
+Redo, Undo & Tablespace Observation
+========================================
+
+-- Connect as SYSDBA
+sqlplus / as sysdba
+
+----------------------------------------
+-- 1. Redo log groups and status
+----------------------------------------
+SELECT group#,
+       status,
+       bytes/1024/1024 AS size_mb
+FROM   v$log
+ORDER  BY group#;
+
+----------------------------------------
+-- 2. Redo log file members
+----------------------------------------
+SELECT group#,
+       member
+FROM   v$logfile
+ORDER  BY group#;
+
+----------------------------------------
+-- 3. Log sequence information
+----------------------------------------
+SELECT thread#,
+       sequence#,
+       status
+FROM   v$log
+ORDER  BY sequence#;
+
+----------------------------------------
+-- 4. Current undo tablespace
+----------------------------------------
+SHOW PARAMETER undo_tablespace;
+
+----------------------------------------
+-- 5. Undo usage statistics
+----------------------------------------
+SELECT name,
+       value
+FROM   v$undostat
+WHERE  rownum <= 5;
+
+SQL> SELECT name, value FROM v$undostat WHERE rownum <= 5; 2 3 4 value * ERROR at line 2: ORA-00904: "VALUE": invalid identifier
+
+V$UNDOSTAT does not use name/value columns
+Undo statistics are exposed as fixed columns
+Use BEGIN_TIME, END_TIME, UNDOBLKS, TXNCOUNT
+
+
+----------------------------------------
+-- 6. List tablespaces and type
+----------------------------------------
+SELECT tablespace_name,
+       contents,
+       status
+FROM   dba_tablespaces
+ORDER  BY tablespace_name;
+
+----------------------------------------
+-- 7. Tablespace to datafile mapping
+----------------------------------------
+SELECT tablespace_name,
+       file_name,
+       bytes/1024/1024 AS size_mb,
+       autoextensible
+FROM   dba_data_files
+ORDER  BY tablespace_name;
+
+----------------------------------------
+-- 8. Temporary tablespace files
+----------------------------------------
+SELECT tablespace_name,
+       file_name,
+       bytes/1024/1024 AS size_mb
+FROM   dba_temp_files;
+
+----------------------------------------
+-- 9. Checkpoint related info (observe)
+----------------------------------------
+SELECT name,
+       value
+FROM   v$parameter
+WHERE  name LIKE '%checkpoint%';
+
+----------------------------------------
+-- End of Lab-2
+----------------------------------------

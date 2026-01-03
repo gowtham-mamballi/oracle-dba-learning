@@ -1,0 +1,73 @@
+========================================
+DBA-P2-LAB-01
+Instance, Memory & Background Processes
+========================================
+
+-- Connect as SYSDBA
+sqlplus / as sysdba
+
+----------------------------------------
+-- 1. Instance status
+----------------------------------------
+SELECT instance_name,
+       status,
+       database_status
+FROM   v$instance;
+
+----------------------------------------
+-- 2. Database open mode
+----------------------------------------
+SELECT name,
+       open_mode
+FROM   v$database;
+
+----------------------------------------
+-- 3. SGA summary
+----------------------------------------
+SELECT name,
+       value/1024/1024 AS size_mb
+FROM   v$sga;
+
+----------------------------------------
+-- 4. SGA detailed components
+----------------------------------------
+SELECT component,
+       current_size/1024/1024 AS size_mb
+FROM   v$sga_dynamic_components
+ORDER  BY component;
+
+----------------------------------------
+-- 5. PGA usage
+----------------------------------------
+SELECT name,
+       value/1024/1024 AS size_mb
+FROM   v$pgastat
+WHERE  name LIKE '%PGA%';
+
+----------------------------------------
+-- 6. Background processes
+----------------------------------------
+SELECT pname,
+       background
+FROM   v$process
+WHERE  pname IS NOT NULL
+ORDER  BY pname;
+
+----------------------------------------
+-- 7. Redo log status
+----------------------------------------
+SELECT group#,
+       status,
+       bytes/1024/1024 AS size_mb
+FROM   v$log;
+
+----------------------------------------
+-- 8. Memory parameters (observe only)
+----------------------------------------
+SHOW PARAMETER sga;
+SHOW PARAMETER pga;
+SHOW PARAMETER memory;
+
+----------------------------------------
+-- End of Lab-1
+----------------------------------------

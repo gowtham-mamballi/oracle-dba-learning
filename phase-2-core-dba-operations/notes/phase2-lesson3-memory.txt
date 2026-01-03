@@ -1,0 +1,123 @@
+Lesson3: Memory Management
+-------------------------
+
+oracle memory
+ |
+ |--> SGA - shared
+ |
+ |--> PGA - private
+
+=========================
+1.SGA=System global area
+=========================
+ what it is:
+ ----------
+  . allocated at instance start up
+  . shared by all sessions
+  . one SGA per instance
+  
+ what it's for:
+ -------------
+  . reduce disk IO
+  . share sql
+  . track chagnes before writing to disk
+  
+ main components:
+ ---------------
+ 1. Database buffer cache
+ ........................
+  . stores data blocks
+  . reads come from here if possible 
+  . modified blocks = dirty buffers
+  
+  * buffe cache stores copies of data blocks read from disk
+  
+ 2. shared pool
+ ..............
+  contains:
+  --------
+   . libraty cache         -> parsed sql and execution plans
+   . data dictionary cache -> metadata (users, objects)
+
+ if shared pool is bad:
+ ----------------------
+   . hard parses
+   . slow logins
+   . cpu spikes
+
+  * shared pool reduces repeated parsing of sql
+
+ 3. Redo log buffer:
+ -------------------
+  . stores change vectors
+  . written to redo logs by LGWR
+  . small but critical 
+
+  * COMMIT flushes redo buffer, not datafiles
+
+ 4. Optional pools
+ ----------------- 
+ . Large pool
+ . java pool
+ 
+ ===========================================
+ 2.PGA - Program global area -Private memory
+ ===========================================
+ 
+ what it is:
+ ----------
+  . Private to each server process
+  . allocated on demand
+  . freed when session ends
+  
+ used for:
+ ---------
+  . sorts
+  . hash joins
+  . bitmap operations
+  . session state
+  
+ * PGA is private memory used for sorts and session work
+ 
+ =============
+ 3. Difference
+ =============
+ 
+ | Topic                | SGA          | PGA             |
+ | -------------------- | ------------ | --------------- |
+ | Shared?              | Yes          | No              |
+ | Allocated when       | Startup      | On demand       |
+ | Used by              | All sessions | One session     |
+ | Disk impact if small | More I/O     | More temp usage |
+
+
+=======================================
+4. Automatic vs manual memory management 
+========================================
+
+ Automatic:
+ ----------
+  . oracle manages SGA + PGA
+  . you set overall target
+  . oracle adjusts internally
+ 
+ Manual:
+ ------
+  . DBA sizes each component
+  . more control
+  . more responsibility
+  
+ * most systems use automatic memory management unless special tuning is needed
+ 
+===================================
+ 5. what memory problems look like:
+===================================
+ . slow queries
+ . high cpu
+ . excessive disk reads
+ . temp tablespace fills up
+ 
+ * memory issues rarely show as errors - they show as slowness
+ 
+ 
+ 

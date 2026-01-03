@@ -1,0 +1,121 @@
+Lesson5:Tablespace and datafiles:
+-------------------------------
+
+tablespace = logical
+datafile   = physcial 
+
+* oracle always talks to tablespace, os sees datafile
+
+====================
+1. storage hierarchy:
+====================
+   Database
+    └── Tablespace (logical)
+         └── Datafile(s) (physical)
+              └── Segments
+                   └── Extents
+                        └── Blocks
+
+============
+2.tablespace
+============
+ . a logical container
+ . holds database objects
+ . can have one or more datafiles
+ . helps DBA manage storage cleanly
+ 
+eg:
+ 1. USERS
+ 2. SYSTEM
+ 3. SYSAUX
+ 4. UNDO
+ 5. TEMP
+
+===========
+3. datafile 
+===========
+ . a physcial file on disk
+ . belongs to one and only one tablespace
+ . stores actual data blocks
+ . is written by DBWR
+ 
+* one datafile   -> one tablespace
+  one tablespace -> many datafiles
+
+================================  
+4. why DBA care about tablespace
+================================
+DBA manages tablespace to 
+ 1. separate datatypes (data vs index)
+ 2. control growth
+ 3. imporve manageability
+ 4. perform maintenance (offline/online)
+ 5. recover specific parts of database
+ 
+* we don't resize tables, we resize tablespace
+
+============================
+5. system, sysaux and users
+============================
+system
+------
+ . core data dictionay
+ . database cannot run without it
+ 
+sysaux
+------
+ . auxilary metadata
+ . APM,OEM statistics
+ 
+users
+-----
+ . default tablespace for users
+ . application data usually goes here or custom TS
+ 
+* system and sysaux stores internal meta data , user objects go into users ts
+
+===================================
+6. Permanent, temporary and unod ts
+===================================
+permanent:
+--------
+ . stores tables, index
+ . eg: users
+ 
+temporary:
+---------
+ . used for sorts, joins
+ . used when pgs spills to disk 
+ . eg: TEMP
+ 
+undo:
+----
+ . stores before image of data
+ . used for rollback and read-consistency
+ . eg: undotbs1
+
+=============
+7. Autoextend
+=============
+datafiles can 
+ . grow automatically
+ . grow in increments
+ . have a max size
+ 
+Tablespace vs Datafile
+tablespace = logical storage layer managed by Oracle
+datafile   = physical file on disk managed by OS
+
+Why multiple datafiles per tablespace
+to manage growth, spread I/O,
+and add storage without resizing existing files
+
+SYSTEM / SYSAUX
+SYSTEM holds core Oracle data dictionary
+SYSAUX holds auxiliary metadata and repository data
+
+TEMP and UNDO
+TEMP is used for sorts, joins, and hash operations
+when PGA spills to disk
+UNDO stores before-image of data,
+used for rollback and read consistency

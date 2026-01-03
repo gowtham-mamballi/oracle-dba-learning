@@ -1,0 +1,138 @@
+Lesson2: startup, shutdown and instance states
+----------------------------------------------
+
+========================== 
+1. oracle startup sequence:
+==========================
+ startup
+ 
+  nomount -> mount -> open
+
+================  
+2. nomount state 
+================
+
+  what oracle does:
+  ----------------
+   . reads spfile/pfile
+   . allocates sga
+   . starts background processes
+
+  what is not available:
+  ---------------------
+   . control files X
+   . datafiles X
+   . redo logs X
+   
+  DBA use cases:
+  -------------
+   . create a new database
+   . recreate control files
+   . basic instance-level troublshooting 
+   
+** nomount = instance only (memory + processes)
+
+==============
+3. mount state
+==============
+ 
+  what oracle does:
+  ----------------
+   . open control files
+   . reads database metadata
+   . knows
+       . datafile names
+       . redo log names	   
+	   . checkpoint SCN
+   
+  what is not available:
+  ---------------------
+  . user data X
+  . tables, indexes X
+  
+  DBA use cases:
+  --------------
+  . media recovery
+  . enable/disable archivelog
+  . rename datafiles
+  . data guard operations
+  
+ ** mount = instance + control files
+ 
+=============
+4. open state
+=============
+
+ what oracle does:
+ ----------------
+  . opens datafiles
+  . open redo log files
+  . database becomes accessible 
+  
+ what user can do:
+ ----------------
+  . run sql
+  . DML/DDL
+  . Transactions
+  
+** open = full database accessible
+
+====================
+5. satrtup  variants
+====================
+1. Full startup
+--------------- 
+  STARTUP 
+
+this is same as 
+  STARTUP NOMOUNT
+  ALTER database MOUNT
+  ALTER databse open
+
+2. controlled starts
+--------------------
+used when DBA wants control
+
+  startup nomount
+  startup mount
+
+================
+6.shutdown modes
+===============
+ 
+1. shutdown normal
+ . waits for users to disconnect
+ . no new connections
+ 
+2. shutdown immediate 
+ . rolls back active transactions
+ . disconnects users
+ . clean shutdown 
+ 
+3. shutdown transactional
+ . waits for transactions to finish 
+ . no new transactions
+ 
+4. shutdown abort
+ . immediate termination
+ . requires instance recovery in next start up
+
+==================== 
+7. Instance recovery
+====================
+After crash or abort
+ . smon reads redo 
+ . applies changes
+ . rolls back uncommitted work
+
+** commit = redo write not data write 
+
+| State   | Memory | Control Files | Datafiles	   | Usage      |
+| ------- | ------ | ------------- | ------------  | ---------- |
+| NOMOUNT | ✅      | ❌             | ❌         | Create DB  |
+| MOUNT   | ✅      | ✅             | ❌         | Recovery   |
+| OPEN    | ✅      | ✅             | ✅         | Normal ops |
+
+ 
+ 
+  
