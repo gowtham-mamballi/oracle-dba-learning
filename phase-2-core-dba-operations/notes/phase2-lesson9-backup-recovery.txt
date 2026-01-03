@@ -55,3 +55,65 @@ Lesson9: Backup and recovery
   
  * this is where archivelog mode matters
  
+================================ 
+4. archive log vs non-arvhive log
+=================================
+
+non-arvhive log
+---------------
+ . redo logs overwritten
+ . recovery only till last backup
+ . data loss possible
+ 
+archivelog
+----------
+. redo logs archived
+. point-in-time recovery possible
+. mandatory for production
+
+==============
+5. hot vs cold
+==============
+
+cold backup:
+----------
+. database shut down
+. files copied
+. simple, consistent
+
+hot backup:
+----------
+. database open
+. requires archivelog
+. no downtime
+
+* modern oracle = hot backups with RMAN 
+
+=======
+6. RMAN
+=======
+. oracle's backup and recovery tool
+. knows database structure
+. validates backups
+. applies redo automatically
+
+=============================
+7. what redo does in recovery
+=============================
+redo:
+----
+ . replays changes
+ . brings datafiles forward in time
+ 
+Undo:
+----
+ . rolls back incomplete work
+ 
+checkpoint:
+-----------
+ . reduces recovery time
+ 
+Redo  → replay changes
+Undo  → roll back incomplete work
+Checkpoint → reduce recovery time
+
