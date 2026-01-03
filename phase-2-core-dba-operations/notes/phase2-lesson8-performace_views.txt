@@ -1,0 +1,100 @@
+Lesson8:Performace view:
+-----------------------
+==========================
+1. DBA performance mindset
+==========================
+ . when someone says
+   database is slow
+    A DBA does not guess
+
+ . DBA will ask 
+  1. who is connected?
+  2. what are they doing?
+  3. Are they waiting?
+  4. on what?
+  
+* all these answer starts from V$views
+
+===============================
+2. V$session - who is connected
+===============================
+ First view DBA should check
+ 
+ What it tells you:
+ -----------------
+  1. Active sessions
+  2. Idle sessions
+  3. who is waiting
+  4. what they are waiting on 
+  
+ core columns:
+ ------------
+  . SID, SERIAL#
+  . USERNAME
+  . STATUS ( active/inactive)
+  . EVENT
+  . WAIT_CLASS
+  
+* v$session -- shows current sesison activity and waits
+  
+==============================  
+3. v$sql - what sql is running
+==============================
+ Shows parsed sql statements
+ 
+ what it tells you:
+ -----------------
+ . sql text
+ . execution count
+ . cpu usage
+ . buffer gets
+ . elapsed time
+ 
+ * not all slow databases have slow sql - but most do 
+   we don't tune here, we observe
+
+=======================================
+4. v$system_event - where time is spent
+=======================================
+ shows system wide wait events since startup
+ 
+ what it tells you:
+ -----------------
+ . major wait events
+ . total waits
+ . time waited
+ eg: 
+  1. db file sequential read
+  2. log file sync
+  3. buffer busy waits
+  
+ * v$system_event shows cumulative wait statistics
+ 
+==============
+5. wait vs cpu
+==============
+ A session can be:
+  1. on cpu
+  2. waiting
+ 
+ Waiting is classified into:
+  . user I/O
+  . system I/O
+  . commit
+  . concurrency
+  . configuration
+  
+ * performance != CPU only
+ 
+===================== 
+6. active vs inactive
+=====================
+ Active:
+  session is using CPU or waiting
+  
+ Inactive:
+  session is idle (waiting for client)
+  
+* inactive sessions are usually not a problem
+
+
