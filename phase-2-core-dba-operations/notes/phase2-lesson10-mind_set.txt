@@ -1,0 +1,63 @@
+lesson10:DBA scenarios and operational checklist:
+------------------------------------------------
+1. The golden DBA rule:
+ Never act first, observe first
+ 
+============================ 
+2.common real-life scenarios
+============================
+
+1. database is slow:
+-------------------
+ wrong reaction:
+  . restart database
+  . kill session randomly
+  
+ correct DBA thought process:
+  1. check sessions(v$session)
+  2. check wait(wait_class, event)
+  3. check sql(v$sql)
+  4. decide if it's:
+      . CPU
+	  . IO
+	  . locking
+	  . commit waits
+  
+2. users can't connect:
+----------------------
+ checklist:
+  1. is databse open
+  2. is listener running
+  3. does user have create session
+  4. correct PDB service
+  5. account lock or expired
+  
+3. disk full:
+------------
+ checklist:
+  1. identify which tablespace
+  2. check datafile autoextend
+  3. add datafile or resize
+  4. monitor growth
+  
+4. database crashed:
+--------------------
+ checklist:
+  1. don't panic
+  2. startup database
+  3. let smon do instance recovery
+  4. check alert log
+  
+5. datafile missing:
+-------------------
+  1. this is media failure
+  2. need backup + redo
+  3. archivelog decides recovery scope
+  
+simple checklist:
+-----------------
+1. Is the database OPEN?
+2. Is this instance or media related?
+3. Are users connected?
+4. Are sessions waiting?
+5. What does alert log say?
