@@ -1,0 +1,175 @@
+========================================
+DBA-P2-LAB-04
+Session & Performance Observation
+========================================
+
+-- Connect as SYSDBA (PDB or CDB is fine for observation)
+sqlplus / as sysdba
+
+----------------------------------------
+-- 1. Confirm container
+----------------------------------------
+SHOW CON_NAME;
+
+----------------------------------------
+-- 2. List all user sessions
+----------------------------------------
+SELECT sid,
+       serial#,
+       username,
+       status
+FROM   v$session
+WHERE  username IS NOT NULL
+ORDER  BY status;
+
+----------------------------------------
+-- 3. Check ACTIVE sessions and waits
+----------------------------------------
+SELECT sid,
+       serial#,
+       username,
+       status,
+       event,
+       wait_class
+FROM   v$session
+WHERE  status = 'ACTIVE'
+AND    username IS NOT NULL;
+
+----------------------------------------
+-- 4. Identify what SQL a session is running
+----------------------------------------
+SELECT s.sid,
+       s.serial#,
+       s.username,
+       q.sql_id,
+       q.sql_text
+FROM   v$session s,
+       v$sql q
+WHERE  s.sql_id = q.sql_id
+AND    s.username IS NOT NULL;
+
+----------------------------------------
+-- 5. Top SQL by executions
+----------------------------------------
+SELECT sql_id,
+       executions,
+       buffer_gets,
+       cpu_time,
+       elapsed_time
+FROM   v$sql
+WHERE  executions > 0
+ORDER  BY executions DESC
+FETCH FIRST 5 ROWS ONLY;
+
+----------------------------------------
+-- 6. System-wide wait events
+----------------------------------------
+SELECT event,
+       total_waits,
+       time_waited
+FROM   v$system_event
+WHERE  wait_class <> 'Idle'
+ORDER  BY time_waited DESC
+FETCH FIRST 5 ROWS ONLY;
+
+----------------------------------------
+-- 7. Check ACTIVE vs INACTIVE session count
+----------------------------------------
+SELECT status,
+       COUNT(*) AS count
+FROM   v$session
+WHERE  username IS NOT NULL
+GROUP  BY status;
+
+----------------------------------------
+-- End of Lab-4
+----------------------------------------
+
+SQL> run
+  1  select sid, serial#, username, status
+  2  from v$session
+  3  where username is not null
+  4* order by status
+
+       SID    SERIAL# USERNAME															       STATUS
+---------- ---------- -------------------------------------------------------------------------------------------------------------------------------- --------
+       193	65430 SYS															       ACTIVE
+	 6	34417 SYS															       ACTIVE
+
+SQL> 
+
+
+SQL> run
+  1  select sid, serial#, username, status, event, wait_class
+  2  from v$session
+  3  where status = 'ACTIVE'
+  4* and username is not null
+
+  SID SERIAL# USERNAME	 STATUS   EVENT 							   WAIT_CLASS
+----- ------- ---------- -------- ---------------------------------------------------------------- ----------------------------------------------------------------
+    6	34417 SYS	 ACTIVE   OFS idle							   Idle
+  193	65430 SYS	 ACTIVE   SQL*Net message from client					   Idle
+
+SQL> 
+
+4
+
+SQL> run
+  1  select s.sid, s.serial#, s.username, q.sql_id, q.sql_text
+  2  from v$session s, v$sql q
+  3  where s.sql_id = q.sql_id
+  4* and s.username is not null
+
+  SID SERIAL# USERNAME	 SQL_ID        SQL_TEXT
+----- ------- ---------- ------------- ------------------------------------------------------------------------------------------------------------------------
+  193	65430 SYS	 bd8y1jkvcmfy4 select s.sid, s.serial#, s.username, q.sql_id, q.sql_text from v$session s, v$sql q where s.sql_id = q.sql_id and s.user
+				       name is not null
+
+
+SQL> 
+
+SQL> run
+  1  select sql_id, executions, buffer_gets, cpu_time, elapsed_time
+  2  from v$sql
+  3  where executions > 0
+  4  order by executions desc
+  5* fetch first 5 rows only
+
+SQL_ID	      EXECUTIONS BUFFER_GETS   CPU_TIME ELAPSED_TIME
+------------- ---------- ----------- ---------- ------------
+0sbbcuruzd66f	   14296       41531	 466727      1078205
+b9nbhsbx8tqz5	   11597       23197	 325392       355151
+b9nbhsbx8tqz5	    5825       11650	 138752       138763
+2s9bghg5agn03	    4966       29768	 158501       157162
+0sbbcuruzd66f	    4945       14500	 253237       660811
+
+SQL> 
+
+SQL> run
+  1  select event, total_waits, time_waited
+  2  from v$system_event
+  3  where wait_class <> 'Idle'
+  4  order by time_waited desc
+  5* fetch first 5 rows only
+
+EVENT								 TOTAL_WAITS TIME_WAITED
+---------------------------------------------------------------- ----------- -----------
+resmgr:cpu quantum							 492	    7459
+db file sequential read 					       14547	    2110
+oracle thread bootstrap 						 142	    1422
+log file parallel write 						4357	    1185
+external table read							   1	    1097
+
+SQL> 
+
+SQL> run
+  1  select status, count(*) as count
+  2  from v$session
+  3  where username is not null
+  4* group by status
+
+STATUS	      COUNT
+-------- ----------
+ACTIVE		  2
+
+SQL> 

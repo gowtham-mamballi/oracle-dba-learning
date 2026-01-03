@@ -97,4 +97,5 @@ Lesson8:Performace view:
   
 * inactive sessions are usually not a problem
 
+** Never tune without knowing the wait event
 
