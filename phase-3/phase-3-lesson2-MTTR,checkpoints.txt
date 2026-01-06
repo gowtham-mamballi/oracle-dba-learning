@@ -1,0 +1,160 @@
+Lesson2: Redo, unod, checkpoints and MTTR
+-----------------------------------------
+lesson1 -- who fix a crash
+lesson2 -- how long will it take
+
+======================
+1. Redo,undo,datafiles - the triangle
+======================
+
+Redo = what happend
+-------------------
+ . change vectors
+ . written before data blocks (WAL rule)
+ . stored in online redo logs 
+ * redo answers -- what changes must exist for correctness
+ 
+undo = what must be undone
+--------------------------
+ . old version of data
+ . used for rollback and read consistency
+ * undo answers -- what changes should never become visible 
+ 
+datafiles = current truth
+------------------------
+ . eventually consistent
+ . may lag behind redo 
+ * datafiles answer -- what is currently persisted
+ 
+** Recovery = reconciling these three
+
+=================================
+2. why crashes don't corrupt data:
+=================================
+ Becuase of Write-Ahead logging (WAL)
+  redo is written to disk before data blocks are written 
+  
+ so after crash:
+  . datafiles may be old
+  . redo is newer
+  . undo explians what to reverse
+  
+ ** this is why instance recovery is possible at all 
+ 
+========================================= 
+3. Checkpoints - the recovery accelerator
+=========================================
+ A checkpoint means:
+  . DBWn writes dirty buffers to datafiles
+  . controlfile + datafile headers updated with SCN
+  * checkpoint answers -- upto which point are datafiles already safe
+  
+why checkpoint matter:
+---------------------
+ . less redo to apply
+ . faster startup
+ . shorter downtime
+
+ no checkpoint = long redo scan = slow recovery
+
+=============================
+4. Instance recovery timeline
+=============================
+ After crash:
+  1. read controlfile
+  2. identify last checkpoint SCN
+  3. scan redo from that SCN onwards
+  4. apply redo ( roll forward)
+  5. roll back uncommitted work ( undo )
+  6. open database
+
+  * Redo between checkpoint SCN and crash SCN defines recovery time
+
+=======
+5. MTTR 
+=======
+ Mean time to recover
+ 
+ oracle allows DBA to target recovery time, not guess it 
+ 
+ FAST_START_MTTR_TARGET
+  
+ What it does:
+  . increases checkpoint frequency 
+  . limits redo that needs recovery
+  . trades I/O for faster startup
+  
+Important truth:
+ MTTR does not guarantee time, it influences behaviour
+ Real recovery depends on:
+ -----------------------
+  . redo volume 
+  . I/O speed
+  . undo health
+  . CPU availability
+
+=================================  
+6. why no media recovery required
+=================================
+oracle says this when:
+ . all datafiles exist
+ . no restore needed
+ . redo alone is sufficient
+ 
+Meaning:
+ . Instance recovery only
+ . no file-level damage
+ 
+This does not mean:
+ . no recovery happened
+It means:
+ . No restore was needed
+ 
+============================= 
+7. Redo size vs recovery time
+=============================
+Big redo logs:
+ . fewer log switches
+ . longer recovery scan
+
+small redo logs:
+ . frequent switches
+ . faster recovery
+ 
+There is no universal best size only trade off's
+senior DBAs size redo based on:
+ . workload 
+ . recovery expectations
+ . HA design ( RAC/DG)
+ 
+======================================
+8. Why long transactions hurt recovery
+======================================
+long running transactions:
+-------------------------- 
+ 1. Generate undo 
+ 2. Delay cleanup
+ 3. extend rollback phase
+
+this is why sometimes:
+---------------------
+ 1. DB opens
+ 2. user still blocks
+ 3. SMON still rolling back 
+ 
+* database is open but not usable yet
+
+==============================
+9. DBA instincts from lesson 2
+==============================
+After a crash, ask:
+ . what was the last checkpoint SCN?
+ . how much redo since then?
+ . any long transactions?
+ . undo healthy?
+ . I/O stressed?
+ 
+   Redo guarantees correctness
+   Undo guarantees consistency
+   Checkpoints limit recovery work
+   MTTR is a design choice, not fate

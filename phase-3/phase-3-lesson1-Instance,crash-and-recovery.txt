@@ -1,0 +1,171 @@
+Lesson1:Instnace, crash and recovery
+------------------------------------
+ DBA's core mental model
+ 
+====================================== 
+1. The one model you must never forget:
+======================================
+ Database - physical, persistent
+ -------------------------------
+  . datafiles
+  . controlfiles
+  . redo log files
+  
+  * exists with or without and instance
+  * survives crashes
+  
+ Instance - logical, volatile
+ ----------------------------
+  . SGA -- memory
+  . Background processes -- SMON, PMON, DBWn.....
+  
+  * exists only while running
+  * dies on crash
+  
+ -- database don't crash, instance do
+ 
+====================================
+2. what exactly is an instance crash:
+====================================
+ an instance crash means:
+  1. oracle processes terminated unexpectedly
+  2. SGA lost instantly
+  3. dirty buffers may not be written
+  4. redo contains changes yet to be applied
+  
+ common causes:
+ -------------
+  . power failure
+  . os reboot
+  . shutdown abort
+  . kill -9
+  . instance eviction (RAC)
+  . Internal errors (ORA-600 / ORA-7445)
+  
+ * None of these damage datafiles by themselves
+ 
+===================================== 
+3. what oracle must fix after a crash:
+=====================================
+ After a crash, datafiles are in this state:
+  . some blocks are old
+  . some blocks are newer (in memory, now lost)
+  . redo knows what should have happened 
+  . unod knows what must be reversed
+  
+ * database is logically inconsistent not corrupt
+ 
+==========================================
+4. Instance recovery(what SMON really does)
+==========================================
+ when instance starts again oracle automatically triggers instance recovery
+ Two phases:
+  
+ Phase1:Roll forward
+ -------------------
+  . SMON reads redo logs
+  . applies all the changes (committed + uncommitted)
+  . brings datafiles to a consistent point
+  
+ Phase2:ROll back
+ ----------------
+  . SMON uses undo segments 
+  . reverses uncommitted transactions
+  . cleans temporary segments
+  
+================================  
+5. why instance recovery is fast
+================================
+ Because oracle minimizes work usig:
+ ---------------------------------
+  . checkpoints
+  . dirty buffer tracking
+  . Incremental redo application
+  
+  If check points are frequent:
+  -----------------------------
+  . Less redo to apply
+  . faster startup
+  . shorter downtime
+  * This is why MTTR tuning exists
+ 
+=====================
+6. Critical DBA fork:
+=====================
+ After crash only one of these happens:
+ 
+ case1:Database opens automatically
+ ----------------------------------
+ . SMON finished recovery
+ . Redo+undo were intact
+ . users reconnect
+ * DBA investigates why it crashed, not how to open it
+ 
+ case2:Database mounts but does not open
+ --------------------------------------
+ Typical reasons:
+  . missing redo log
+  . undo tablespace problem 
+  . control file inconsistency
+  
+  * SMON can't continue 
+  * DBA must intervene
+  
+  This is where:
+   . Manual recovery
+   . RMAN
+   . Restore decisions begin
+  
+ case3:Database cannot even mount:
+ --------------------------------
+ eg:
+  . controlfile lost
+  . severe corruption
+  . disk failure
+  
+  * instance recovery is impossible 
+  * DBA-led recovery only 
+ 
+======================== 
+7. The big misconception
+========================
+ -- SMON will take care of it anyway
+X flase in many real cases
+
+ SMON assumes:
+ ------------
+  . redo exists and is readable
+  . undo is accessible 
+  . control files are valid
+  . Datafiles are reachable
+
+  once any assumption breaks, automation stops
+  that's when experience should replace process
+
+================================
+8. Why DBAs don't restart blindly   
+================================
+A restart can:
+------------
+ . Mask corruption
+ . delay detection
+ . cause repeated crashes
+ . make recovery worse
+ 
+A senior DBA asks before restarting:
+----------------------------------
+ . why did it crash
+ . is redo intact
+ . any I/O or disk errors
+ . has this happened before 
+ . single isntance or RAC
+
+======
+9. RAC
+======
+ . one instance crashes
+ . database stays open 
+ . other instances perform recovery
+ . cache and block ownership changes
+ 
+ 
