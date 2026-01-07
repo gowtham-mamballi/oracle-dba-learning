@@ -168,4 +168,4 @@ A senior DBA asks before restarting:
  . other instances perform recovery
  . cache and block ownership changes
  
- 
+  
