@@ -1,0 +1,84 @@
+Lesson4: Redo, undo and control file failure scenarios:
+------------------------------------------------------
+ when oracle stops and DBA takes over
+ 
+ . lesson 1-3 : show how oracle handles failure
+ . lesson 4   : how oracle waits for DBA to take over
+ 
+* oracle will never guess when a data correctness is at risk. It will stop and wait for DBA.
+
+=============================================================
+1. Failure scenario-redo log required for recovery is missing
+=============================================================
+ what oracle expects:
+  . online redo logs exist
+  . redo covers changes after last checkpoint
+  
+ what breaks:
+  . current or active redo log is missing/corrupt
+  
+ what oracle does:
+ ----------------
+  . instance starts
+  . database mounts
+  . does not open
+  . error appears ( ora-00313 / ora-00312)
+  
+ why oracle stops:
+  redo = only source of truth for changes not in datafiles, without it oracle cannot guarantee correctness
+  
+ * SMON stops, DBA takes over this is not instance recovery, this is media recovery
+
+=============================== 
+2. Undo tablespace is corrupted
+===============================
+ what oracle expects:
+  . undo available to roll back uncommitted work
+  
+ what breaks:
+  . undo segments unreadable
+  . unod datafile corrupt/missing
+  
+ what oreacle does:
+ -----------------
+  . may mount
+  . may partially open 
+  . or may stop with errors
+  
+ why oracle stops:
+  redo can apply changes, but without undo oracle cannot:
+   . roll back uncommitted transactions
+   . guranatee logical consistency
+
+==========================   
+3. Control file is missing 
+==========================
+ what oracle expects:
+  . controlfile available to describe the database
+  
+ what breaks:
+  . all controlfiles missing or corrupt
+  
+ what oracle does:
+  . instance starts
+  . database will not mount
+  
+ why oracle stops:
+  without the control file oracle does not know:
+   . which datafiles belong to the DB
+   . which redo logs exist
+   . where recovery should start
+   
+
+ * Is oracle missing information, or missing files?
+   if files are missing --> oracle will not proceed
+
+===========================   
+4. DBA responsibility boundary:
+===========================
+ 1. Instance recovery          --> oracle
+ 2. Media recovery             --> DBA
+ 3. Decision to restore        --> DBA
+ 4. Decision to open resetlogs --> DBA
+ *** oracle will never make these choices for you 
+ 

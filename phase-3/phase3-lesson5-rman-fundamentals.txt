@@ -1,0 +1,104 @@
+phase3-lesson5:RMAN fundamentals(seen through the recovery lens)
+---------------------------------------------------------------
+ RMAN is not a backup tool.
+ RMAN is a recovery decision engine
+ 
+ ===================
+ 1. why RMAN exists:
+ ===================
+  oracle separates respinsibilities:
+   . oracle (SMON) -> fixes logical inconsistency
+   . DBA ( RMAN )  -> fixes physcial uncertainty
+ 
+ RMAN exists because:
+ ------------------- 
+  1. files can be lost
+  2. disks can fail
+  3. controlfiles can disappear
+  4. redo can be missing
+ 
+* RMAN is how you restore certainty
+
+ =======================================================
+ 2. RMAN does only TWO things(everythings else is detail)
+ =======================================================
+  1. Restore:
+  ----------
+   bring files back from backup
+  eg:
+   1. datafile missing
+   2. controlfiles missing
+   3. undo file corrupted
+  restore = file comes back
+ 
+ 2. recover:
+ ----------
+  apply redo to make restored files consistent
+  eg:
+   1. apply archived redo
+   2. roll forward to SCN
+   3. reach a consistent point-in-time
+  recover = file becomes correct
+  
+ Golden rule:
+ -----------
+  restore is about existence
+  recover is about correctness
+  
+ ================================== 
+ 3. Mapping lesson4 -> RMAN actions
+ ===================================
+  scenario A: missing required redo
+   . restore cannot fix missing redo
+   . recovery is incomplete by definition
+   . decision required:
+      1. incomplete recovery
+	  2. resetlogs
+	  3. accept data loss
+	  
+ ** RMAN obeys your decision - it won't choose for you
+ 
+ scenario B: undo corruption
+  . restore undo datafile (if backed up)
+  . or create new undo and clean logically
+  . RMAN may be involved, but decision comes first
+  
+ ** undo recovery is about corerctness, not mechanics
+ 
+ scenario c: controlfile loss
+  . restore control file from RMAN 
+  . or recreate manually 
+  . only after this can recovery begin 
+  
+ ** without controlfile, RMAN itself is blind
+ 
+ ==================================
+ 4. what RMAN will never do for you
+ ==================================
+  important boundaries:
+   RMAN will not: 
+    1. decide how much data loss is acceptable 
+	2. decide to open RESTLOGS
+	3. guess missing redo 
+	4. override correctness rule
+  ** all these are DBA decisions
+ 
+ ====================== 
+ 5. RMAN decision flow
+ ======================
+Database problem
+   ↓
+Is a file missing or damaged?
+   ├─ NO → Oracle handles it
+   └─ YES
+        ↓
+     RESTORE file(s)
+        ↓
+     RECOVER file(s)
+        ↓
+     OPEN database (or RESETLOGS)
+ 
+** RMAN does not fix databases, it executes DBA decisions safely
+
+
+ 

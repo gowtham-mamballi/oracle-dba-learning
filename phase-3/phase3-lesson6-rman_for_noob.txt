@@ -1,0 +1,44 @@
+lesson6-RMAN for noobe:
+----------------------
+ Think of RMAN as 3 verbs only:
+ BACKUP  = create a copy
+ RESTORE = put files back
+ RECOVER = apply redo
+
+=============== 
+RMAN components:
+===============
+ 1. Target database:
+ ------------------
+  . your database
+  . controlfile stores:
+    1. backup metadata
+	2. file locations
+	3. incarnation info
+ ** this is why rman can work without reocovery catalog
+ 
+ 2. Backup pieces vs image copies:
+ --------------------------------
+| Type       | What it is      | When used             |
+| ---------- | --------------- | --------------------- |
+| Backupset  | RMAN format     | Default, efficient    |
+| Image copy | Exact file copy | Fast switch, advanced |
+
+ 3. restore != recovery
+ ----------------------
+  restore  = os copy
+  recovery = redo application
+  eg:
+   restore datafile -> file exists but inconsistent
+   recover datafile -> file usable
+   
+===============  
+sample commands:
+===============
+| Command                     | Purpose                 |
+| --------------------------- | ----------------------- |
+| `SHOW ALL`                  | Configuration awareness |
+| `BACKUP DATABASE`           | Core backup             |
+| `LIST BACKUP`               | Metadata query          |
+| `RESTORE DATABASE VALIDATE` | Safety check            |
+

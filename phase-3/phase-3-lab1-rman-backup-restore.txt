@@ -1,0 +1,247 @@
+phase3-lab1:RMAN full backup and restore:
+----------------------------------------
+ Goal:
+  1. take a full rman backup
+  2. prove it works
+  3. restore a datafile
+  4. recover without resetlogs
+
+SQL> archive log list;
+Database log mode	       Archive Mode
+Automatic archival	       Enabled
+Archive destination	       USE_DB_RECOVERY_FILE_DEST
+Oldest online log sequence     69
+Next log sequence to archive   71
+Current log sequence	       71
+SQL> 
+
+[oracle@srv1 ~]$ rman target /
+
+Recovery Manager: Release 19.0.0.0.0 - Production on Wed Jan 7 16:30:27 2026
+Version 19.8.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORADB (DBID=2803372975)
+
+RMAN> 
+
+RMAN> show all;
+
+using target database control file instead of recovery catalog
+RMAN configuration parameters for database with db_unique_name ORADB are:
+CONFIGURE RETENTION POLICY TO REDUNDANCY 1; # default
+CONFIGURE BACKUP OPTIMIZATION OFF; # default
+CONFIGURE DEFAULT DEVICE TYPE TO DISK; # default
+CONFIGURE CONTROLFILE AUTOBACKUP ON; # default
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '%F'; # default
+CONFIGURE DEVICE TYPE DISK PARALLELISM 1 BACKUP TYPE TO BACKUPSET; # default
+CONFIGURE DATAFILE BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+CONFIGURE ARCHIVELOG BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+CONFIGURE MAXSETSIZE TO UNLIMITED; # default
+CONFIGURE ENCRYPTION FOR DATABASE OFF; # default
+CONFIGURE ENCRYPTION ALGORITHM 'AES128'; # default
+CONFIGURE COMPRESSION ALGORITHM 'BASIC' AS OF RELEASE 'DEFAULT' OPTIMIZE FOR LOAD TRUE ; # default
+CONFIGURE RMAN OUTPUT TO KEEP FOR 7 DAYS; # default
+CONFIGURE ARCHIVELOG DELETION POLICY TO NONE; # default
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/u01/app/oracle/product/19.0.0/db_1/dbs/snapcf_oradb.f'; # default
+
+RMAN> 
+
+[oracle@srv1 ~]$ mkdir -p /u01/app/oracle/rman_bkp
+[oracle@srv1 ~]$
+[oracle@srv1 oracle]$ ls -ld /u01/app/oracle/rman_bkp
+drwxr-xr-x. 2 oracle oinstall 6 Jan  7 16:31 /u01/app/oracle/rman_bkp
+[oracle@srv1 oracle]$ 
+
+[oracle@srv1 ~]$ rman target /
+
+Recovery Manager: Release 19.0.0.0.0 - Production on Wed Jan 7 16:30:27 2026
+Version 19.8.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORADB (DBID=2803372975)
+
+RMAN> show all;
+
+using target database control file instead of recovery catalog
+RMAN configuration parameters for database with db_unique_name ORADB are:
+CONFIGURE RETENTION POLICY TO REDUNDANCY 1; # default
+CONFIGURE BACKUP OPTIMIZATION OFF; # default
+CONFIGURE DEFAULT DEVICE TYPE TO DISK; # default
+CONFIGURE CONTROLFILE AUTOBACKUP ON; # default
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '%F'; # default
+CONFIGURE DEVICE TYPE DISK PARALLELISM 1 BACKUP TYPE TO BACKUPSET; # default
+CONFIGURE DATAFILE BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+CONFIGURE ARCHIVELOG BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+CONFIGURE MAXSETSIZE TO UNLIMITED; # default
+CONFIGURE ENCRYPTION FOR DATABASE OFF; # default
+CONFIGURE ENCRYPTION ALGORITHM 'AES128'; # default
+CONFIGURE COMPRESSION ALGORITHM 'BASIC' AS OF RELEASE 'DEFAULT' OPTIMIZE FOR LOAD TRUE ; # default
+CONFIGURE RMAN OUTPUT TO KEEP FOR 7 DAYS; # default
+CONFIGURE ARCHIVELOG DELETION POLICY TO NONE; # default
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/u01/app/oracle/product/19.0.0/db_1/dbs/snapcf_oradb.f'; # default
+
+RMAN> backup as compressed backupset
+2> database
+3> plus archivelog
+4> format '/u01/app/oracle/rman_bkp/full_%d_%T_%U.bkp';
+
+
+Starting backup at 07-JAN-2026 16:35:44
+current log archived
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=65 device type=DISK
+channel ORA_DISK_1: starting compressed archived log backup set
+channel ORA_DISK_1: specifying archived log(s) in backup set
+input archived log thread=1 sequence=28 RECID=6 STAMP=1219218625
+input archived log thread=1 sequence=29 RECID=7 STAMP=1219300841
+input archived log thread=1 sequence=30 RECID=8 STAMP=1219486085
+input archived log thread=1 sequence=31 RECID=9 STAMP=1219486469
+input archived log thread=1 sequence=32 RECID=10 STAMP=1219488855
+input archived log thread=1 sequence=33 RECID=11 STAMP=1219489075
+input archived log thread=1 sequence=34 RECID=12 STAMP=1219496123
+input archived log thread=1 sequence=35 RECID=13 STAMP=1219557967
+input archived log thread=1 sequence=36 RECID=14 STAMP=1219565163
+input archived log thread=1 sequence=37 RECID=15 STAMP=1219565864
+input archived log thread=1 sequence=38 RECID=16 STAMP=1219572348
+input archived log thread=1 sequence=39 RECID=17 STAMP=1219652424
+input archived log thread=1 sequence=40 RECID=18 STAMP=1219779983
+input archived log thread=1 sequence=41 RECID=19 STAMP=1219821937
+input archived log thread=1 sequence=42 RECID=20 STAMP=1219864770
+input archived log thread=1 sequence=43 RECID=21 STAMP=1219914004
+input archived log thread=1 sequence=44 RECID=22 STAMP=1219949242
+input archived log thread=1 sequence=45 RECID=23 STAMP=1219992265
+input archived log thread=1 sequence=46 RECID=24 STAMP=1220023663
+input archived log thread=1 sequence=47 RECID=25 STAMP=1220076428
+input archived log thread=1 sequence=48 RECID=26 STAMP=1220112642
+input archived log thread=1 sequence=49 RECID=27 STAMP=1220264138
+input archived log thread=1 sequence=50 RECID=28 STAMP=1220384820
+input archived log thread=1 sequence=51 RECID=29 STAMP=1220422824
+input archived log thread=1 sequence=52 RECID=30 STAMP=1220438976
+input archived log thread=1 sequence=53 RECID=31 STAMP=1220621776
+input archived log thread=1 sequence=54 RECID=32 STAMP=1221070359
+input archived log thread=1 sequence=55 RECID=33 STAMP=1221071007
+input archived log thread=1 sequence=56 RECID=34 STAMP=1221071758
+input archived log thread=1 sequence=57 RECID=35 STAMP=1221077313
+input archived log thread=1 sequence=58 RECID=36 STAMP=1221110429
+input archived log thread=1 sequence=59 RECID=37 STAMP=1221194667
+input archived log thread=1 sequence=60 RECID=38 STAMP=1221459794
+input archived log thread=1 sequence=61 RECID=39 STAMP=1221478056
+input archived log thread=1 sequence=62 RECID=40 STAMP=1221497228
+input archived log thread=1 sequence=63 RECID=41 STAMP=1221507524
+input archived log thread=1 sequence=64 RECID=42 STAMP=1221559397
+input archived log thread=1 sequence=65 RECID=43 STAMP=1221633954
+input archived log thread=1 sequence=66 RECID=44 STAMP=1221759118
+input archived log thread=1 sequence=67 RECID=45 STAMP=1221811727
+input archived log thread=1 sequence=68 RECID=46 STAMP=1221901005
+input archived log thread=1 sequence=69 RECID=47 STAMP=1221902667
+input archived log thread=1 sequence=70 RECID=48 STAMP=1221927735
+input archived log thread=1 sequence=71 RECID=49 STAMP=1221928544
+channel ORA_DISK_1: starting piece 1 at 07-JAN-2026 16:35:45
+channel ORA_DISK_1: finished piece 1 at 07-JAN-2026 16:36:40
+piece handle=/u01/app/oracle/rman_bkp/full_ORADB_20260107_0f4da9j1_1_1.bkp tag=TAG20260107T163545 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:55
+Finished backup at 07-JAN-2026 16:36:40
+
+Starting backup at 07-JAN-2026 16:36:40
+using channel ORA_DISK_1
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00001 name=/u01/app/oracle/oradata/ORADB/system01.dbf
+input datafile file number=00003 name=/u01/app/oracle/oradata/ORADB/sysaux01.dbf
+input datafile file number=00004 name=/u01/app/oracle/oradata/ORADB/undotbs01.dbf
+input datafile file number=00007 name=/u01/app/oracle/oradata/ORADB/users01.dbf
+channel ORA_DISK_1: starting piece 1 at 07-JAN-2026 16:36:41
+channel ORA_DISK_1: finished piece 1 at 07-JAN-2026 16:37:46
+piece handle=/u01/app/oracle/fra/ORADB/backupset/2026_01_07/o1_mf_nnndf_TAG20260107T163641_nowntsn1_.bkp tag=TAG20260107T163641 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:01:05
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00010 name=/u01/app/oracle/oradata/ORADB/pdb1/sysaux01.dbf
+input datafile file number=00009 name=/u01/app/oracle/oradata/ORADB/pdb1/system01.dbf
+input datafile file number=00011 name=/u01/app/oracle/oradata/ORADB/pdb1/undotbs01.dbf
+input datafile file number=00013 name=/u01/app/oracle/oradata/ORADB/pdb1/l1_ts01.dbf
+input datafile file number=00012 name=/u01/app/oracle/oradata/ORADB/pdb1/users01.dbf
+channel ORA_DISK_1: starting piece 1 at 07-JAN-2026 16:37:46
+channel ORA_DISK_1: finished piece 1 at 07-JAN-2026 16:38:21
+piece handle=/u01/app/oracle/fra/ORADB/AE5BF40048503BCBE0537C01A8C01251/backupset/2026_01_07/o1_mf_nnndf_TAG20260107T163641_nownwtov_.bkp tag=TAG20260107T163641 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:35
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00006 name=/u01/app/oracle/oradata/ORADB/pdbseed/sysaux01.dbf
+input datafile file number=00005 name=/u01/app/oracle/oradata/ORADB/pdbseed/system01.dbf
+input datafile file number=00008 name=/u01/app/oracle/oradata/ORADB/pdbseed/undotbs01.dbf
+channel ORA_DISK_1: starting piece 1 at 07-JAN-2026 16:38:21
+channel ORA_DISK_1: finished piece 1 at 07-JAN-2026 16:38:56
+piece handle=/u01/app/oracle/fra/ORADB/AE5BC6F18492329DE0537C01A8C037AC/backupset/2026_01_07/o1_mf_nnndf_TAG20260107T163641_nownxxz1_.bkp tag=TAG20260107T163641 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:35
+Finished backup at 07-JAN-2026 16:38:56
+
+Starting backup at 07-JAN-2026 16:38:56
+current log archived
+using channel ORA_DISK_1
+channel ORA_DISK_1: starting compressed archived log backup set
+channel ORA_DISK_1: specifying archived log(s) in backup set
+input archived log thread=1 sequence=72 RECID=50 STAMP=1221928737
+channel ORA_DISK_1: starting piece 1 at 07-JAN-2026 16:38:57
+channel ORA_DISK_1: finished piece 1 at 07-JAN-2026 16:38:58
+piece handle=/u01/app/oracle/rman_bkp/full_ORADB_20260107_0j4da9p1_1_1.bkp tag=TAG20260107T163857 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 07-JAN-2026 16:38:58
+
+Starting Control File and SPFILE Autobackup at 07-JAN-2026 16:38:58
+piece handle=/u01/app/oracle/fra/ORADB/autobackup/2026_01_07/o1_mf_s_1221928738_nownz2xm_.bkp comment=NONE
+Finished Control File and SPFILE Autobackup at 07-JAN-2026 16:38:59
+
+RMAN> 
+
+
+RMAN> list backup summary;
+
+
+List of Backups
+===============
+Key     TY LV S Device Type Completion Time      #Pieces #Copies Compressed Tag
+------- -- -- - ----------- -------------------- ------- ------- ---------- ---
+2       B  F  A DISK        04-DEC-2025 11:05:53 1       1       NO         TAG20251204T110543
+3       B  F  A DISK        04-DEC-2025 11:06:01 1       1       NO         TAG20251204T110543
+4       B  F  A DISK        04-DEC-2025 11:06:08 1       1       NO         TAG20251204T110543
+8       B  A  A DISK        04-DEC-2025 11:07:03 1       1       NO         TAG20251204T110702
+9       B  F  A DISK        04-DEC-2025 11:07:04 1       1       NO         TAG20251204T110704
+10      B  F  A DISK        11-DEC-2025 10:26:13 1       1       NO         TAG20251211T102612
+11      B  A  A DISK        07-JAN-2026 16:36:37 1       1       YES        TAG20260107T163545
+12      B  F  A DISK        07-JAN-2026 16:37:41 1       1       YES        TAG20260107T163641
+13      B  F  A DISK        07-JAN-2026 16:38:13 1       1       YES        TAG20260107T163641
+14      B  F  A DISK        07-JAN-2026 16:38:53 1       1       YES        TAG20260107T163641
+15      B  A  A DISK        07-JAN-2026 16:38:57 1       1       YES        TAG20260107T163857
+16      B  F  A DISK        07-JAN-2026 16:38:58 1       1       NO         TAG20260107T163858
+
+RMAN> 
+
+RMAN> restore database validate;
+
+Starting restore at 07-JAN-2026 16:44:11
+using channel ORA_DISK_1
+
+channel ORA_DISK_1: starting validation of datafile backup set
+channel ORA_DISK_1: reading from backup piece /u01/app/oracle/fra/ORADB/backupset/2026_01_07/o1_mf_nnndf_TAG20260107T163641_nowntsn1_.bkp
+channel ORA_DISK_1: piece handle=/u01/app/oracle/fra/ORADB/backupset/2026_01_07/o1_mf_nnndf_TAG20260107T163641_nowntsn1_.bkp tag=TAG20260107T163641
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: validation complete, elapsed time: 00:01:15
+channel ORA_DISK_1: starting validation of datafile backup set
+channel ORA_DISK_1: reading from backup piece /u01/app/oracle/fra/ORADB/AE5BF40048503BCBE0537C01A8C01251/backupset/2026_01_07/o1_mf_nnndf_TAG20260107T163641_nownwtov_.bkp
+channel ORA_DISK_1: piece handle=/u01/app/oracle/fra/ORADB/AE5BF40048503BCBE0537C01A8C01251/backupset/2026_01_07/o1_mf_nnndf_TAG20260107T163641_nownwtov_.bkp tag=TAG20260107T163641
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: validation complete, elapsed time: 00:00:35
+channel ORA_DISK_1: starting validation of datafile backup set
+channel ORA_DISK_1: reading from backup piece /u01/app/oracle/fra/ORADB/AE5BC6F18492329DE0537C01A8C037AC/backupset/2026_01_07/o1_mf_nnndf_TAG20260107T163641_nownxxz1_.bkp
+channel ORA_DISK_1: piece handle=/u01/app/oracle/fra/ORADB/AE5BC6F18492329DE0537C01A8C037AC/backupset/2026_01_07/o1_mf_nnndf_TAG20260107T163641_nownxxz1_.bkp tag=TAG20260107T163641
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: validation complete, elapsed time: 00:00:45
+Finished restore at 07-JAN-2026 16:46:47
+
+RMAN> 
+
+

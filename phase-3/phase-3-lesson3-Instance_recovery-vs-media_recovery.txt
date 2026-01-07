@@ -1,0 +1,112 @@
+Lesson3: Instance recovery vs media recovery
+--------------------------------------------
+
+lesson1 : what breaks
+lesson2 : how recovery works
+lesson3 : who is responsible, and what action is legal
+
+============================================================
+1. The single most inmportant distinction in oracle recovery
+============================================================
+ Instance Recovery:
+ ------------------
+  . Triggered automatically
+  . Uses online redo
+  . NO files restored
+  . SMON-driven
+  
+ Media Recovery:
+ --------------
+  . Triggered by file damage or loss
+  . Requires restore + recover
+  . DBA-driven
+  . RMAN involved
+
+=================================  
+2. Instance recovery - definition
+=================================
+ Instance recovery happens when:
+ ------------------------------
+  . Instance crashes
+  . All datafiles exist
+  . All required redo exists
+  . Controlfiles are intact
+  
+ Oracle action:
+ -------------
+  . start instance
+  . mount database
+  . apply redo 
+  . roll back uncommitted work
+  
+ * No DBA commands needed to recover
+ * DBA investigates after open
+ 
+ Typical triggers:
+ ----------------
+  . power failuer
+  . os reboot
+  . shutdown abort
+  . RAC instance eviction
+
+=============================== 
+3. Media recovery - definition
+==============================
+ Media recovery is required when :
+ ------------------------------
+  . Datafile is missing or corrupted
+  . control file is missing
+  . redo log required for recovery is missing
+  . disk failure occurred
+  
+ oracle action:
+ -------------
+  . stop automatic recovery
+  . wait for DBA
+  
+ * Database will not open until DBA acts
+ 
+====================== 
+4. DBA decision table:
+=======================
+
+ | Situation             | Recovery Type | Who acts        |
+ | --------------------- | ------------- | --------------- |
+ | Instance crash        | Instance      | Oracle (SMON)   |
+ | Missing datafile      | Media         | DBA             |
+ | Corrupt block         | Media         | DBA             |
+ | Missing controlfile   | Media         | DBA             |
+ | Missing required redo | Media         | DBA             |
+ | RAC node crash        | Instance      | Other instances |
+
+=================================
+5. why oracle stops automatically
+=================================
+ oracle stops because:
+  . applying redo to missing/corrupt files can destory data
+  . wrong assumptions cause silent corruption
+  . saftey > availability
+  
+ * oracle prefers downtime over wrong data
+ 
+ABORT
+  ↓
+Instance destroyed
+  ↓
+Startup invoked
+  ↓
+SPFILE defines instance
+  ↓
+OS provides memory
+  ↓
+SGA created
+  ↓
+Background processes start
+  ↓
+Controlfile read (MOUNT)
+  ↓
+Redo applied (RECOVERY)
+  ↓
+Undo cleanup
+  ↓
+Database OPEN

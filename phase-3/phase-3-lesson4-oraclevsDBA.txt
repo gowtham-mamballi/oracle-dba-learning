@@ -1,0 +1,75 @@
+Lesson4:Hardened recap: when oracle fixes vs when the DBA must step in
+---------------------
+ oracle will fix logical inconsistency, oracle will stop on physical uncertainty
+
+=====================
+DBA's first question:
+=====================
+  Is oracle missing information, or missing files?
+   missing information  = oracle can recover
+   missing fie/identity = oracle stops
+ 
+=======================
+the 3 failuer scenarios:
+=======================
+ 
+ 1. missing required redo(current/active)
+ ----------------------------------------
+  | Aspect          | Behavior                           |
+  | --------------- | ---------------------------------- |
+  | Instance starts | ✅                                 |
+  | Database mounts | ❌                                 |
+  | Database opens  | ❌                                 |
+  | Why             | Database identity unknown          |
+  | Recovery type   | **Restore / recreate controlfile** |
+  | Ownership       | **DBA**                            |
+ 
+ Mental rule:
+  no redo = no truth -> oracle refuses to open
+  
+ 2. undo tablespace corruption:
+ -----------------------------
+  | Aspect          | Behavior                         |
+  | --------------- | -------------------------------- |
+  | Instance starts | ✅                               |
+  | Database mounts | ✅                               |
+  | Database opens  | ❌ or ⚠️                         |
+  | Danger          | **Silent logical corruption**    |
+  | Why             | Cannot rollback uncommitted work |
+  | Recovery type   | **Media / corrective recovery**  |
+  | Ownership       | **DBA**                          |
+
+ Mental rule:
+  redo protects correctness, undo protects visibility
+  
+ 3. controlfile loss:
+ -------------------
+  | Aspect          | Behavior                           |
+  | --------------- | ---------------------------------- |
+  | Instance starts | ✅                                 |
+  | Database mounts | ❌                                 |
+  | Database opens  | ❌                                 |
+  | Why             | Database identity unknown          |
+  | Recovery type   | **Restore / recreate controlfile** |
+  | Ownership       | **DBA**                            |
+
+ Mental rule:
+  No controlfile = oracle is blind
+  
+==================================  
+Instance recovery vs media reovery
+==================================
+
+| Type              | Who does it   | Uses          | Restores files? |
+| ----------------- | ------------- | ------------- | --------------- |
+| Instance recovery | Oracle (SMON) | Online redo   | ❌              |
+| Media recovery    | DBA           | Backup + redo | ✅              |
+
+if files are intact -> oracle 
+if files are missing / damaged -> DBA
+
+Startup problem
+   ↓
+Can Oracle see all required files?
+   ├─ YES → Instance recovery (Oracle)
+   └─ NO  → Media recovery (DBA)
